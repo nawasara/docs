@@ -1,0 +1,23 @@
+{
+    "name": "nawasara/docs",
+    "description": "Component documentation and examples for Nawasara",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Nawasara\\Docs\\": "src/"
+        }
+    },
+    "require": {
+        "php": "^8.1",
+        "nawasara/ui": "*",
+        "livewire/livewire": "^3.0"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Nawasara\\Docs\\DocsServiceProvider"
+            ]
+        }
+    }
+}
