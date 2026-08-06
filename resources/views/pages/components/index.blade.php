@@ -1,5 +1,6 @@
 @php
     $catalog = app(\Nawasara\Docs\Support\ComponentCatalog::class);
+    $previews = app(\Nawasara\Docs\Support\ComponentPreviews::class);
     $grouped = $catalog->grouped();
     $stats = $catalog->stats();
 
@@ -109,7 +110,13 @@
                                     </div>
                                 @endif
 
-                                @if ($c['usage'])
+                                @php $preview = $previews->for($c['name']); @endphp
+
+                                @if ($preview)
+                                    {{-- Preview sekaligus menampilkan sumbernya, jadi
+                                         blok "Pemakaian" di bawah tidak perlu diulang. --}}
+                                    <x-nawasara-docs::preview :code="$preview" />
+                                @elseif ($c['usage'])
                                     <div class="mt-3">
                                         <x-nawasara-docs::code lang="blade" label="Pemakaian">{{ $c['usage'] }}</x-nawasara-docs::code>
                                     </div>

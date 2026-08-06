@@ -17,9 +17,14 @@
 ])
 
 @php
+    // Slot sudah ter-escape sekali oleh Blade, dan `{{ }}` di bawah akan
+    // meng-escape lagi — hasilnya `&lt;x-nawasara-ui::badge` tampil apa adanya
+    // di layar alih-alih `<x-nawasara-ui::badge`. Kembalikan ke bentuk mentah
+    // di sini supaya escaping tepat terjadi sekali, di tempat yang benar.
+    //
     // trim() supaya indentasi blade tidak ikut terbawa ke dalam <pre>, yang
     // akan membuat setiap baris tergeser beberapa spasi tanpa alasan.
-    $code = trim($slot->toHtml());
+    $code = trim(html_entity_decode($slot->toHtml(), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
 @endphp
 
 <div class="group relative" x-data="{ copied: false }">

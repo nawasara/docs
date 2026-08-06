@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Nawasara\Docs\Support\ComponentCatalog;
+use Nawasara\Docs\Support\DocsNavigation;
 use Nawasara\Docs\Support\GuideRenderer;
 
 /*
@@ -29,12 +30,17 @@ Route::middleware(['web', 'auth'])->prefix('nawasara-docs')->group(function () {
     Route::view('/components/gallery', 'nawasara-docs::pages.examples.base')
         ->name('nawasara-docs.components.gallery');
 
-    // Halaman contoh lama — dipertahankan supaya tautan yang sudah beredar
-    // tidak mati, tapi tidak lagi muncul di navigasi.
-    Route::view('/components/table', 'nawasara-docs::pages.examples.table')
+    // Halaman contoh lama dialihkan ke katalog, bukan dirender.
+    //
+    // Keduanya memakai x-nawasara-ui::form.* di dalam view statis, yang
+    // melempar "Using $this when not in object context" karena komponen itu
+    // mengandalkan konteks Livewire. Isinya sendiri sudah tergantikan oleh
+    // katalog komponen, jadi mengalihkan lebih jujur daripada menyimpan
+    // halaman yang selalu 500 — dan tautan yang sudah beredar tetap hidup.
+    Route::redirect('/components/table', '/'.DocsNavigation::PREFIX.'/components')
         ->name('nawasara-docs.components.table');
 
-    Route::view('/components/form', 'nawasara-docs::pages.examples.form')
+    Route::redirect('/components/form', '/'.DocsNavigation::PREFIX.'/components')
         ->name('nawasara-docs.components.form');
 
     // ── API ─────────────────────────────────────────────────
@@ -43,6 +49,9 @@ Route::middleware(['web', 'auth'])->prefix('nawasara-docs')->group(function () {
 
     Route::view('/api/auth', 'nawasara-docs::pages.api.auth')
         ->name('nawasara-docs.api.auth');
+
+    Route::view('/api/domains', 'nawasara-docs::pages.api.domains')
+        ->name('nawasara-docs.api.domains');
 
     // ── Panduan ─────────────────────────────────────────────
     // Merender berkas markdown yang sudah ada di repo. Rentang barisnya
@@ -58,6 +67,9 @@ Route::middleware(['web', 'auth'])->prefix('nawasara-docs')->group(function () {
             'breadcrumb' => [['label' => 'Panduan'], ['label' => 'Install Agent']],
         ]);
     })->name('nawasara-docs.guides.agent');
+
+    Route::view('/guides/add-api', 'nawasara-docs::pages.guides.add-api')
+        ->name('nawasara-docs.guides.api');
 
     Route::get('/guides/package', function (GuideRenderer $renderer) {
         return view('nawasara-docs::pages.guide', [

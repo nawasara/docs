@@ -1,17 +1,43 @@
 <?php
 
 /*
-| Dokumentasi tampil di sidebar supaya bisa ditemukan tanpa harus tahu
-| URL-nya. Sebelumnya sengaja disembunyikan, tapi dokumentasi yang hanya
-| bisa dibuka oleh yang sudah hafal alamatnya tidak berguna bagi orang yang
-| paling membutuhkannya — yang baru bergabung.
+| Menu sidebar untuk Dokumentasi.
 |
-| Tanpa `permission`: isinya cara memakai komponen dan API, bukan data.
-| WorkspaceManager memperlakukan permission null sebagai "boleh untuk semua
-| yang sudah login", dan rute-nya sendiri sudah bermiddleware auth.
+| SATU workspace dengan submenu datar, bukan satu entri per bagian.
+| WorkspaceManager menggabungkan entri ber-id sama dan mengambil label dari
+| yang pertama ter-load, jadi mendaftarkan tiap bagian sebagai workspace
+| terpisah menghasilkan sidebar berjudul "Mulai" berisi seluruh halaman —
+| dan submenu-nya terduplikasi karena file ini terbaca dari dua path
+| (packages/ dan vendor/, keduanya menunjuk berkas yang sama).
+|
+| Daftar halaman dibangun dari DocsNavigation supaya sidebar dan halaman
+| indeks tidak bisa berbeda; cukup satu tempat yang disunting.
+|
+| Tanpa `permission`: isinya cara memakai sistem, bukan datanya. Rutenya
+| sendiri sudah bermiddleware auth.
 */
 
-$prefix = 'nawasara-docs';
+use Nawasara\Docs\Support\DocsNavigation;
+
+// Config dimuat sebelum container siap, jadi instansiasi langsung.
+// DocsNavigation memang tidak punya dependency.
+$nav = new DocsNavigation();
+
+$submenu = [];
+
+foreach ($nav->sections() as $section) {
+    foreach ($section['items'] as $item) {
+        // route() belum tentu tersedia saat config di-cache, jadi URL disusun
+        // dari path yang sama dengan yang dipakai routes/web.php.
+        $submenu[] = [
+            'label' => $item['label'],
+            'icon' => $item['icon'] ?? 'lucide-file-text',
+            'url' => url($item['path']),
+            'permission' => null,
+            'navigate' => true,
+        ];
+    }
+}
 
 return [
     [
@@ -21,42 +47,6 @@ return [
         'group' => 'Pengaturan',
         'url' => '',
         'permission' => null,
-        'submenu' => [
-            [
-                'label' => 'Ikhtisar',
-                'icon' => 'lucide-compass',
-                'url' => url($prefix),
-                'permission' => null,
-                'navigate' => true,
-            ],
-            [
-                'label' => 'Komponen UI',
-                'icon' => 'lucide-layout-grid',
-                'url' => url($prefix.'/components'),
-                'permission' => null,
-                'navigate' => true,
-            ],
-            [
-                'label' => 'Referensi API',
-                'icon' => 'lucide-plug',
-                'url' => url($prefix.'/api'),
-                'permission' => null,
-                'navigate' => true,
-            ],
-            [
-                'label' => 'Install Agent',
-                'icon' => 'lucide-server',
-                'url' => url($prefix.'/guides/install-agent'),
-                'permission' => null,
-                'navigate' => true,
-            ],
-            [
-                'label' => 'Buat Package',
-                'icon' => 'lucide-package-plus',
-                'url' => url($prefix.'/guides/package'),
-                'permission' => null,
-                'navigate' => true,
-            ],
-        ],
+        'submenu' => $submenu,
     ],
 ];

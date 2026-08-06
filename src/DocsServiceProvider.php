@@ -32,6 +32,8 @@ class DocsServiceProvider extends ServiceProvider
         $this->app->singleton(ApiCatalog::class);
         $this->app->singleton(GuideRenderer::class);
         $this->app->singleton(DocsNavigation::class);
+        $this->app->singleton(\Nawasara\Docs\Support\ComponentPreviews::class);
+        $this->app->singleton(\Nawasara\Docs\Support\ApiExamples::class);
     }
 
     /**
