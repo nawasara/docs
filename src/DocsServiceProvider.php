@@ -2,8 +2,13 @@
 
 namespace Nawasara\Docs;
 
+use Illuminate\Support\Facades\Blade;
 use Livewire\Livewire;
 use Illuminate\Support\Str;
+use Nawasara\Docs\Support\ApiCatalog;
+use Nawasara\Docs\Support\ComponentCatalog;
+use Nawasara\Docs\Support\DocsNavigation;
+use Nawasara\Docs\Support\GuideRenderer;
 use Symfony\Component\Finder\Finder;
 use Illuminate\Support\ServiceProvider;
 
@@ -14,7 +19,35 @@ class DocsServiceProvider extends ServiceProvider
         $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'nawasara-docs');
 
+        $this->registerComponents();
         $this->registerLivewire();
+    }
+
+    public function register(): void
+    {
+        // Katalog dipakai lintas halaman dalam satu request (indeks membaca
+        // statistiknya, halaman detail membaca isinya), jadi singleton
+        // menghindari pemindaian file yang sama berulang kali.
+        $this->app->singleton(ComponentCatalog::class);
+        $this->app->singleton(ApiCatalog::class);
+        $this->app->singleton(GuideRenderer::class);
+        $this->app->singleton(DocsNavigation::class);
+    }
+
+    /**
+     * Daftarkan komponen anonim milik docs (shell, code).
+     *
+     * Dibungkus is_dir() — memanggil anonymousComponentPath dengan folder yang
+     * tidak ada akan membuat `view:cache` gagal saat deploy, bukan saat
+     * halaman dibuka.
+     */
+    protected function registerComponents(): void
+    {
+        $path = __DIR__.'/../resources/views/components';
+
+        if (is_dir($path)) {
+            Blade::anonymousComponentPath($path, 'nawasara-docs');
+        }
     }
 
     public function registerLivewire(): void
