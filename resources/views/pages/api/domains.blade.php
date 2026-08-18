@@ -75,10 +75,27 @@
                                             <code class="text-xs text-neutral-800 dark:text-neutral-200">/{{ $r['uri'] }}</code>
                                         </td>
                                         <td class="py-1.5 align-top">
+                                            {{-- Scope BUKAN satu-satunya penjaga. Endpoint di
+                                                 balik JWT warga/pegawai tidak punya scope sama
+                                                 sekali, dan menampilkan em-dash di situ
+                                                 terbaca sebagai "tidak butuh izin apa pun" —
+                                                 padahal justru sebaliknya. --}}
                                             @forelse ($r['scopes'] as $s)
                                                 <code class="block text-xs text-emerald-700 dark:text-emerald-400">{{ $s }}</code>
                                             @empty
-                                                <span class="text-xs text-neutral-400">—</span>
+                                                @php($guard = $r['guard'] ?? ['kind' => 'public', 'label' => '—', 'detail' => null])
+                                                <span @class([
+                                                    'text-xs font-medium',
+                                                    'text-sky-700 dark:text-sky-400' => $guard['kind'] === 'citizen',
+                                                    'text-violet-700 dark:text-violet-400' => $guard['kind'] === 'staff',
+                                                    'text-amber-700 dark:text-amber-400' => $guard['kind'] === 'token',
+                                                    'text-neutral-400' => $guard['kind'] === 'public',
+                                                ])>{{ $guard['label'] }}</span>
+                                                @if ($guard['detail'])
+                                                    <span class="mt-0.5 block text-[11px] leading-snug text-neutral-500 dark:text-neutral-400">
+                                                        {{ $guard['detail'] }}
+                                                    </span>
+                                                @endif
                                             @endforelse
                                         </td>
                                     </tr>

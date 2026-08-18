@@ -25,7 +25,9 @@ class ApiCatalog
      *
      * @return array<string, array<int, array{
      *   methods:array<int,string>, uri:string, name:?string,
-     *   scopes:array<int,string>, domain:string, action:string
+     *   scopes:array<int,string>,
+     *   guard:array{kind:string, label:string, detail:?string},
+     *   domain:string, action:string
      * }>>
      */
     public function grouped(): array
@@ -68,6 +70,7 @@ class ApiCatalog
                 'uri' => $uri,
                 'name' => $route->getName(),
                 'scopes' => $this->scopesFor($route),
+                'guard' => $this->guardFor($route),
                 'domain' => $this->domainFor($uri, $prefix),
                 'action' => $this->actionFor($route),
             ];
@@ -196,6 +199,68 @@ class ApiCatalog
         }
 
         return array_values(array_unique($out));
+    }
+
+    /**
+     * Siapa yang boleh memanggil endpoint ini.
+     *
+     * ⚠️ Scope BUKAN satu-satunya penjaga. Nawasara punya tiga jalur autentikasi
+     * dengan cara memberi izin yang berbeda:
+     *
+     *   api.auth    token `nws_` → dibatasi SCOPE
+     *   api.citizen JWT warga    → cukup token sah; datanya bersandar pada `sub`
+     *   api.staff   JWT pegawai  → dibatasi PERMISSION Spatie, diperiksa can()
+     *                              di controller, bukan di middleware
+     *
+     * Tanpa metode ini, 25 dari 55 endpoint tampil dengan kolom scope kosong —
+     * terbaca sebagai "tidak butuh izin apa pun", padahal justru sebaliknya.
+     * Itu persis jenis kekeliruan yang membuat dokumentasi lebih merugikan
+     * daripada tidak ada.
+     *
+     * @return array{kind:string, label:string, detail:?string}
+     */
+    protected function guardFor($route): array
+    {
+        $middleware = array_filter(
+            $route->gatherMiddleware(),
+            fn ($m) => is_string($m),
+        );
+
+        if (in_array('api.staff', $middleware, true)) {
+            return [
+                'kind' => 'staff',
+                'label' => 'JWT pegawai',
+                // Permission-nya diperiksa di controller lewat can(), jadi
+                // tidak dapat dibaca dari rute. Disebutkan sebagai keterangan,
+                // bukan dikarang sebagai daftar.
+                'detail' => 'Izin Spatie diperiksa di controller (can()), bukan di rute.',
+            ];
+        }
+
+        if (in_array('api.citizen', $middleware, true)) {
+            return [
+                'kind' => 'citizen',
+                'label' => 'JWT warga',
+                'detail' => 'Identitas diambil dari klaim `sub`; tidak ada scope.',
+            ];
+        }
+
+        if ($this->scopesFor($route) !== []) {
+            return ['kind' => 'scope', 'label' => 'Token nws_ + scope', 'detail' => null];
+        }
+
+        if (in_array('api.auth', $middleware, true)) {
+            return [
+                'kind' => 'token',
+                'label' => 'Token nws_',
+                // Tanpa scope pada rute yang memakai api.auth, SETIAP token
+                // yang sah dapat memanggilnya. Kadang memang disengaja, kadang
+                // middleware-nya lupa dipasang — dan pembaca docs berhak tahu.
+                'detail' => 'Tanpa batasan scope — setiap token sah dapat memanggilnya.',
+            ];
+        }
+
+        return ['kind' => 'public', 'label' => 'Terbuka', 'detail' => null];
     }
 
     /** Segmen domain setelah prefix: api/v1/secscan/stats → 'secscan'. */
