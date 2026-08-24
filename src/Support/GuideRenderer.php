@@ -35,9 +35,9 @@ class GuideRenderer
         $key = 'nawasara-docs.guide.'.md5($path.'|'.$fromLine.'|'.$toLine);
 
         return Cache::remember($key, self::CACHE_TTL, function () use ($path, $fromLine, $toLine) {
-            $full = base_path($path);
+            $full = $this->locate($path);
 
-            if (! is_file($full)) {
+            if ($full === null) {
                 return ['html' => '', 'toc' => [], 'missing' => true];
             }
 
@@ -49,6 +49,41 @@ class GuideRenderer
                 'missing' => false,
             ];
         });
+    }
+
+    /**
+     * Mencari berkas panduan, karena letaknya BERBEDA antara pengembangan
+     * dan produksi.
+     *
+     * Di repo pengembangan paket ada di `packages/nawasara-x/`. Di produksi
+     * folder itu tidak ikut ke dalam image sama sekali — Composer memasang
+     * paketnya dari Packagist ke `vendor/nawasara/x/`. Jalur yang ditulis
+     * pemanggil karena itu hanya benar di satu sisi, dan halamannya tampil
+     * kosong di sisi yang lain: rute ada, menu ada, isi tidak.
+     *
+     * Ditemukan 24 Agustus 2026 — panduan install agent secscan kosong di
+     * produksi sejak dirilis, tanpa satu pun galat tercatat.
+     *
+     * @return string|null  Jalur mutlak, atau null bila tidak ditemukan.
+     */
+    protected function locate(string $path): ?string
+    {
+        $candidates = [$path];
+
+        // packages/nawasara-secscan/README.md → vendor/nawasara/secscan/README.md
+        if (preg_match('#^packages/nawasara-([^/]+)/(.+)$#', $path, $m)) {
+            $candidates[] = "vendor/nawasara/{$m[1]}/{$m[2]}";
+        }
+
+        foreach ($candidates as $candidate) {
+            $full = base_path($candidate);
+
+            if (is_file($full)) {
+                return $full;
+            }
+        }
+
+        return null;
     }
 
     public function forget(): void
