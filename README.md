@@ -12,7 +12,7 @@ Isinya dibaca dari kode yang sedang berjalan, bukan dari catatan terpisah — da
 | Referensi API | `Route::getRoutes()` + `ScopeRegistry::grouped()` |
 | Autentikasi & token | ditulis manual — menjelaskan alur, bukan mendaftar data |
 | Install agent secscan | `packages/nawasara-secscan/README.md` mulai baris 132 |
-| Membuat package baru | `CLAUDE.md` |
+| Membuat package baru | `AGENTS.md` |
 
 Halaman API juga menandai dua hal yang tidak memunculkan error di mana pun: scope yang dipakai route tapi belum didaftarkan (endpoint terkunci untuk semua token), dan scope terdaftar yang tidak dipakai route mana pun (kemungkinan middleware lupa dipasang).
 

@@ -75,8 +75,8 @@ Route::middleware(['web', 'auth'])->prefix('nawasara-docs')->group(function () {
         return view('nawasara-docs::pages.guide', [
             'title' => 'Membuat Package Baru',
             'lead' => 'Konvensi scaffold dan wiring yang wajib. Melewatkan salah satunya biasanya tidak memunculkan error — menu tidak muncul, atau kelas Tailwind tidak ter-compile, tanpa keluhan apa pun.',
-            'source' => 'CLAUDE.md',
-            'guide' => $renderer->render('CLAUDE.md'),
+            'source' => 'AGENTS.md',
+            'guide' => $renderer->render('AGENTS.md'),
             'breadcrumb' => [['label' => 'Panduan'], ['label' => 'Membuat Package']],
         ]);
     })->name('nawasara-docs.guides.package');
