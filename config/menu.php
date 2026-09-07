@@ -13,8 +13,18 @@
 | Daftar halaman dibangun dari DocsNavigation supaya sidebar dan halaman
 | indeks tidak bisa berbeda; cukup satu tempat yang disunting.
 |
-| Tanpa `permission`: isinya cara memakai sistem, bukan datanya. Rutenya
-| sendiri sudah bermiddleware auth.
+| Digerbang `docs.page.view`. Isinya memang cara memakai sistem dan bukan
+| datanya — tetapi ia menyebut nama host, contoh konfigurasi, dan cara kerja
+| bagian dalam sistem, sehingga tetap perlu ditentukan siapa yang melihatnya.
+|
+| Izinnya diberikan ke SEMUA peran oleh PermissionSeeder, jadi secara bawaan
+| tidak ada yang kehilangan akses; yang berubah adalah izin itu kini DAPAT
+| dicabut per peran.
+|
+| ⚠️ WAJIB seed dulu sebelum dipakai:
+|   php artisan db:seed --class="Nawasara\Docs\Database\Seeders\PermissionSeeder"
+| Tanpa itu workspace Dokumentasi HILANG dari sidebar semua orang, karena
+| WorkspaceManager::accessible() menyaring dengan izin ini.
 */
 
 use Nawasara\Docs\Support\DocsNavigation;
@@ -33,7 +43,7 @@ foreach ($nav->sections() as $section) {
             'label' => $item['label'],
             'icon' => $item['icon'] ?? 'lucide-file-text',
             'url' => url($item['path']),
-            'permission' => null,
+            'permission' => 'docs.page.view',
             'navigate' => true,
         ];
     }
@@ -46,7 +56,7 @@ return [
         'icon' => 'lucide-book-open',
         'group' => 'Pengaturan',
         'url' => '',
-        'permission' => null,
+        'permission' => 'docs.page.view',
         'submenu' => $submenu,
     ],
 ];

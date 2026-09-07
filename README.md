@@ -18,7 +18,19 @@ Halaman API juga menandai dua hal yang tidak memunculkan error di mana pun: scop
 
 ## Akses
 
-Di belakang `auth`, tanpa permission tambahan: isinya cara memakai sistem, bukan datanya. Muncul di sidebar pada grup **Pengaturan**.
+Di belakang `auth` **dan** permission `docs.page.view`. Muncul di sidebar pada grup **Pengaturan**.
+
+```bash
+php artisan db:seed --class="Nawasara\Docs\Database\Seeders\PermissionSeeder"
+```
+
+Hanya `view` — tidak ada create/update/delete. Isi dokumentasi dibangun dari berkas dan katalog runtime, bukan dari basis data, jadi tidak ada yang dapat disunting lewat panel; izin tulis hanya akan menggerbang halaman yang tidak ada.
+
+Seeder memberikan izin ini ke **semua peran yang ada**, bukan hanya `developer`. Dokumentasi adalah cara memakai sistem, dan menggerbangnya ke developer saja mencabut panduan dari justru orang yang paling membutuhkannya: operator OPD yang baru memakai sistemnya. Yang berubah adalah izin itu kini *dapat* dicabut per peran.
+
+⚠️ **Seed dulu sebelum memasang versi ini.** Sebelumnya menu memakai `permission => null`, jadi semua pemilik akun melihatnya. Tanpa seeder, workspace Dokumentasi hilang dari sidebar semua orang — `WorkspaceManager::accessible()` menyaring dengan izin yang belum ada.
+
+Penggerbangan dilakukan di **dua** tempat, dan keduanya perlu: `config/menu.php` menyembunyikan menunya, `routes/web.php` menolak URL-nya. Menyembunyikan menu saja tetap menyisakan alamatnya dapat diketik langsung.
 
 ## Yang perlu diketahui saat mengubah
 
@@ -33,7 +45,7 @@ Di belakang `auth`, tanpa permission tambahan: isinya cara memakai sistem, bukan
 ## Menambah halaman
 
 1. Buat blade di `resources/views/pages/`
-2. Daftarkan rute di `routes/web.php` dalam grup `['web', 'auth']`
+2. Daftarkan rute di `routes/web.php` **di dalam grup yang sudah ada** — grup itu sudah membawa `auth` + `docs.page.view`, jadi halaman baru ikut tergerbang tanpa perlu diingat satu per satu
 3. Tambahkan ke `src/Support/DocsNavigation.php` — sidebar docs dan halaman indeks membacanya dari sana, jadi cukup satu tempat
 4. Kalau perlu muncul di sidebar aplikasi, tambahkan juga ke `config/menu.php`
 

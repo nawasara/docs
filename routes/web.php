@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Spatie\Permission\Middleware\PermissionMiddleware;
 use Nawasara\Docs\Support\ComponentCatalog;
 use Nawasara\Docs\Support\DocsNavigation;
 use Nawasara\Docs\Support\GuideRenderer;
@@ -13,12 +14,18 @@ use Nawasara\Docs\Support\GuideRenderer;
 | konfigurasi, dan cara kerja bagian dalam sistem — bukan bahan untuk pembaca
 | anonim, jadi seluruh grup memakai middleware `auth`.
 |
-| Tidak digerbang permission tambahan: siapa pun yang sudah punya akun boleh
-| membaca cara memakai komponen dan API. Yang perlu dijaga adalah datanya,
-| dan itu sudah dijaga di endpoint masing-masing.
+| Digerbang `docs.page.view` di tingkat GRUP, bukan per rute. Ada 13 rute di
+| berkas ini dan sebagiannya pengalihan; menggerbang satu per satu berarti
+| setiap halaman baru harus ingat menambahkannya sendiri — dan yang lupa tidak
+| menghasilkan galat apa pun, hanya halaman yang diam-diam terbuka.
+|
+| Penggerbangan ini melengkapi menu, bukan menggantikannya: menyembunyikan
+| menu saja tetap menyisakan URL-nya dapat diketik langsung.
 */
 
-Route::middleware(['web', 'auth'])->prefix('nawasara-docs')->group(function () {
+Route::middleware(['web', 'auth', PermissionMiddleware::using('docs.page.view')])
+    ->prefix('nawasara-docs')
+    ->group(function () {
 
     Route::view('/', 'nawasara-docs::pages.index')
         ->name('nawasara-docs.index');
