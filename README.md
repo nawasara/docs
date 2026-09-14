@@ -1,53 +1,55 @@
 # Nawasara Docs
 
-Dokumentasi internal Nawasara, hidup di dalam aplikasi di `/nawasara-docs`.
+Internal Nawasara documentation, living inside the app at `/nawasara-docs`.
 
-Isinya dibaca dari kode yang sedang berjalan, bukan dari catatan terpisah — daftar endpoint datang dari tabel route, daftar scope dari registry, katalog komponen dari file blade `nawasara/ui`, dan panduan dari berkas markdown yang sudah ada di repo. Dokumentasi yang menyalin akan basi tanpa ada yang menyadarinya; yang membaca dari sumbernya tidak bisa.
+Its content is read from the running code, not from separate notes. The endpoint list comes from the route table, the scope list from the registry, the component catalog from the `nawasara/ui` blade files, and the guides from markdown files already in the repo. Documentation that copies its source goes stale without anyone noticing; documentation that reads from the source cannot.
 
-## Isi
+## Contents
 
-| Halaman | Sumber |
+| Page | Source |
 |---|---|
-| Katalog komponen | memindai `packages/nawasara-ui/resources/views/components/**` |
-| Referensi API | `Route::getRoutes()` + `ScopeRegistry::grouped()` |
-| Autentikasi & token | ditulis manual — menjelaskan alur, bukan mendaftar data |
-| Install agent secscan | `packages/nawasara-secscan/README.md` mulai baris 132 |
-| Membuat package baru | `AGENTS.md` |
+| Component catalog | scans `packages/nawasara-ui/resources/views/components/**` |
+| API reference | `Route::getRoutes()` plus `ScopeRegistry::grouped()` |
+| Authentication and tokens | written by hand, explains the flow rather than listing data |
+| Install the secscan agent | `packages/nawasara-secscan/README.md` from line 132 |
+| Creating a new package | `AGENTS.md` |
 
-Halaman API juga menandai dua hal yang tidak memunculkan error di mana pun: scope yang dipakai route tapi belum didaftarkan (endpoint terkunci untuk semua token), dan scope terdaftar yang tidak dipakai route mana pun (kemungkinan middleware lupa dipasang).
+The API page also flags two things that raise no error anywhere: a scope a route uses but that has not been registered (the endpoint is locked for all tokens), and a registered scope that no route uses (a middleware was probably left off).
 
-## Akses
+## Access
 
-Di belakang `auth` **dan** permission `docs.page.view`. Muncul di sidebar pada grup **Pengaturan**.
+Behind `auth` and the `docs.page.view` permission. It appears in the sidebar under the **Pengaturan** group.
 
 ```bash
 php artisan db:seed --class="Nawasara\Docs\Database\Seeders\PermissionSeeder"
 ```
 
-Hanya `view` — tidak ada create/update/delete. Isi dokumentasi dibangun dari berkas dan katalog runtime, bukan dari basis data, jadi tidak ada yang dapat disunting lewat panel; izin tulis hanya akan menggerbang halaman yang tidak ada.
+Only `view`, there is no create/update/delete. Documentation content is built from files and the runtime catalog, not from a database, so nothing can be edited through the panel; a write permission would only gate a page that does not exist.
 
-Seeder memberikan izin ini ke **semua peran yang ada**, bukan hanya `developer`. Dokumentasi adalah cara memakai sistem, dan menggerbangnya ke developer saja mencabut panduan dari justru orang yang paling membutuhkannya: operator OPD yang baru memakai sistemnya. Yang berubah adalah izin itu kini *dapat* dicabut per peran.
+The seeder grants this permission to every existing role, not just `developer`. Documentation is how you use the system, and gating it to developers only takes the guide away from the people who need it most: OPD operators new to the system. What changed is that the permission can now be revoked per role.
 
-⚠️ **Seed dulu sebelum memasang versi ini.** Sebelumnya menu memakai `permission => null`, jadi semua pemilik akun melihatnya. Tanpa seeder, workspace Dokumentasi hilang dari sidebar semua orang — `WorkspaceManager::accessible()` menyaring dengan izin yang belum ada.
+## Notes
 
-Penggerbangan dilakukan di **dua** tempat, dan keduanya perlu: `config/menu.php` menyembunyikan menunya, `routes/web.php` menolak URL-nya. Menyembunyikan menu saja tetap menyisakan alamatnya dapat diketik langsung.
+Seed before deploying this version. The menu previously used `permission => null`, so every account holder saw it. Without the seeder, the Documentation workspace disappears from everyone's sidebar, because `WorkspaceManager::accessible()` filters by a permission that does not exist yet.
 
-## Yang perlu diketahui saat mengubah
+Gating happens in two places, and both are needed: `config/menu.php` hides the menu, and `routes/web.php` rejects the URL. Hiding the menu alone still leaves the address typeable directly.
 
-**Katalog di-cache 5 menit.** Saat sedang menyunting komponen, panggil `POST /nawasara-docs/refresh` atau `php artisan cache:clear` supaya perubahan langsung terlihat.
+## Notes for changes
 
-**Dokumentasi komponen tidak seragam.** Sebagian punya blok `{{-- --}}` di awal file dengan bagian `Pemakaian:`, sebagian hanya komentar per-prop, sebagian tidak ada sama sekali. Halaman katalog menandai yang belum terdokumentasi alih-alih menyembunyikannya, jadi daftarnya sekaligus berfungsi sebagai daftar pekerjaan. Format paling lengkap ada di `components/badge.blade.php` — tiru itu.
+The catalog is cached for 5 minutes. While editing a component, call `POST /nawasara-docs/refresh` or run `php artisan cache:clear` so changes show up right away.
 
-**Tailwind butuh dua `@source`.** Di `resources/css/app.css` package ini terdaftar lewat `packages/` **dan** `vendor/`. Yang pertama untuk dev lokal, karena `vendor/nawasara/docs` di Windows berupa junction dan Tailwind tidak menelusurinya; yang kedua untuk build server, di mana `packages/` kosong.
+Component documentation is not uniform. Some files have a `{{-- --}}` block at the top with a `Pemakaian:` section, some have only per-prop comments, some have none. The catalog page flags the undocumented ones instead of hiding them, so the list doubles as a task list. The most complete format is in `components/badge.blade.php`; follow that.
 
-**Halaman docs adalah view statis, bukan Livewire.** Komponen `x-nawasara-ui::form.*` mengandalkan konteks Livewire dan akan melempar `Using $this when not in object context` bila dipakai di sini — pakai elemen native untuk kebutuhan sederhana seperti kotak pencarian sisi klien.
+Tailwind needs two `@source` lines. In `resources/css/app.css` this package is registered via `packages/` and via `vendor/`. The first is for local dev, because `vendor/nawasara/docs` on Windows is a junction and Tailwind does not follow it; the second is for the build server, where `packages/` is empty.
 
-## Menambah halaman
+Docs pages are static views, not Livewire. The `x-nawasara-ui::form.*` components rely on a Livewire context and will throw `Using $this when not in object context` if used here. Use native elements for simple needs like a client-side search box.
 
-1. Buat blade di `resources/views/pages/`
-2. Daftarkan rute di `routes/web.php` **di dalam grup yang sudah ada** — grup itu sudah membawa `auth` + `docs.page.view`, jadi halaman baru ikut tergerbang tanpa perlu diingat satu per satu
-3. Tambahkan ke `src/Support/DocsNavigation.php` — sidebar docs dan halaman indeks membacanya dari sana, jadi cukup satu tempat
-4. Kalau perlu muncul di sidebar aplikasi, tambahkan juga ke `config/menu.php`
+## Adding a page
+
+1. Create a blade in `resources/views/pages/`
+2. Register the route in `routes/web.php` inside the existing group. That group already carries `auth` plus `docs.page.view`, so a new page is gated too without having to remember it each time.
+3. Add it to `src/Support/DocsNavigation.php`. The docs sidebar and the index page both read from there, so one place is enough.
+4. If it needs to appear in the app sidebar, add it to `config/menu.php` as well.
 
 ## Author
 
