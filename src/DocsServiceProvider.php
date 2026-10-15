@@ -21,6 +21,10 @@ class DocsServiceProvider extends ServiceProvider
 
         $this->registerComponents();
         $this->registerLivewire();
+
+        if (class_exists(\Nawasara\Modal\Livewire\LivewireModal::class)) {
+            \Nawasara\Modal\Livewire\LivewireModal::allow('nawasara-docs.examples.demo-modal');
+        }
     }
 
     public function register(): void
