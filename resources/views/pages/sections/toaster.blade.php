@@ -19,7 +19,7 @@
         </x-nawasara-ui::button>
 
         <x-nawasara-ui::button color="success"
-            @click="Toast.warning('<b>Toaster</b> Loading message!', {showProgress: true})">
+            @click="Toast.warning('Toaster: Loading message!', {showProgress: true})">
             Toaster show progress
         </x-nawasara-ui::button>
     </div>
