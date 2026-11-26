@@ -237,6 +237,16 @@ class ApiCatalog
             ];
         }
 
+        // Sebelum ini jalur tanpa baris `users` jatuh ke cabang terakhir dan
+        // tampil seolah tidak dijaga apa pun.
+        if (in_array('api.staff.identity', $middleware, true)) {
+            return [
+                'kind' => 'staff',
+                'label' => 'JWT pegawai',
+                'detail' => 'Token pegawai sah cukup; tidak menuntut akun Nawasara. Identitas dari klaim `sub`.',
+            ];
+        }
+
         if (in_array('api.citizen', $middleware, true)) {
             return [
                 'kind' => 'citizen',
